@@ -1,10 +1,13 @@
 const twilio = require('twilio')
 const express = require('express')
+const bodyParser = require('body-parser')
 require('dotenv').config()
 
 const client = new twilio(process.env.ACCOUNT_ID, process.env.AUTH_TOKEN)
-const VoiceResponse = twilio.twiml.VoiceResponse
 const app = express()
+
+app.use(bodyParser.urlencoded({ extended: true }))
+app.use(bodyParser.json())
 
 // Make a simple phone call
 app.get('/make/:phone_number', (req, res) => {
@@ -25,7 +28,7 @@ app.get('/make/:phone_number', (req, res) => {
                 もう少しだけ待ってくれませんか？？
             </prosody>
         </Say>
-        <Gather action="${req.protocol + '://' + req.get('host') + '/gather'}">
+        <Gather action="${'https://' + req.get('host') + '/gather'}">
             <Say language="ja-JP" voice="Polly.Takumi">
                 <prosody rate="fast" volume="soft" pitch="x-low">
                     という方は1を。直ぐにお支払いが可能な方は2を押してください。
@@ -83,8 +86,8 @@ app.post('/gather', (req, res) => {
 </Response>
 `
 
-  if (request.body.Digits) {
-    switch (request.body.Digits) {
+  if (req.body.Digits) {
+    switch (req.body.Digits) {
       case '1':
         res.status(200).header({ 'Content-Type': 'text/xml' }).send(routeOne.toString())
         break
