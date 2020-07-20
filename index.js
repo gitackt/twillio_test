@@ -10,31 +10,26 @@ app.use(bodyParser.urlencoded({ extended: true }))
 app.use(bodyParser.json())
 
 const twiML = (content) => `<Response>${content}</Response>`
-
-const gatherTemplate = (content, path) => {
-  return `<Gather action="${'https://' + req.get('host') + '/' + path}">${content}</Gather>`
-}
+const gatherTemplate = (content, path) => `<Gather action="${path}">${content}</Gather>`
 
 const manSpeakingTemplate = (content) => {
-  const res = `
+  return `
         <Say language="ja-JP" voice="Polly.Takumi">
             <prosody rate="fast" volume="soft" pitch="x-low">
                 ${content}
             </prosody>
         </Say>
     `
-  return res
 }
 
 const womanSpeakingTemplate = (content) => {
-  const res = `
-          <Say language="ja-JP" voice="Polly.Mizuki">
-          <prosody rate="x-fast" volume="x-loud" pitch="high">
-                  ${content}
-              </prosody>
-          </Say>
-      `
-  return res
+  return `
+        <Say language="ja-JP" voice="Polly.Mizuki">
+            <prosody rate="x-fast" volume="x-loud" pitch="high">
+                ${content}
+            </prosody>
+        </Say>
+    `
 }
 
 // Make a simple phone call
@@ -45,10 +40,10 @@ app.get('/make/:phone_number', (req, res) => {
   const line4 = 'なんか言え。'
 
   const twiml = twiML(
-    manSpeakingTemplate(line1),
-    womanSpeakingTemplate(line2),
-    gatherTemplate(manSpeakingTemplate(line3), 'gather'),
-    manSpeakingTemplate(line4)
+    manSpeakingTemplate(line1) +
+      womanSpeakingTemplate(line2) +
+      gatherTemplate(manSpeakingTemplate(line3), 'https://' + req.get('host') + '/gather') +
+      manSpeakingTemplate(line4)
   )
 
   if (req.params.phone_number) {
