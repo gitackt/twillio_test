@@ -2,17 +2,43 @@ const twilio = require('twilio')
 const express = require('express')
 require('dotenv').config()
 
-const VoiceResponse = twilio.twiml.VoiceResponse
 const client = new twilio(process.env.ACCOUNT_ID, process.env.AUTH_TOKEN)
+const VoiceResponse = twilio.twiml.VoiceResponse
 const app = express()
-
-const TWILLIO_URL = 'http://demo.twilio.com/docs/voice.xml'
 
 // Make a simple phone call
 app.get('/make/:phone_number', (req, res) => {
+  const twiml = `
+    <Response>
+        <Say language="ja-JP" voice="Polly.Takumi">
+            <prosody rate="fast" volume="soft" pitch="x-low">
+                おいコラ。金返せコラ。
+                死にてぇなら生命保険に加入してからにしろ。
+                クズが。返済がまだ終わってねえだろうが。
+                お客様のお支払い頂く金額は遅延損害金を含めまして
+                ¥102481となります。
+            </prosody>
+        </Say>
+        <Say language="ja-JP" voice="Polly.Mizuki">
+            <prosody rate="x-fast" volume="x-loud" pitch="high">
+                え！すぐにそんな大金用意できません！
+                もう少しだけ待ってくれませんか？？
+            </prosody>
+        </Say>
+        <Gather action="/recieve" method="GET">
+            <Say language="ja-JP" voice="Polly.Takumi">
+                <prosody rate="fast" volume="soft" pitch="x-low">
+                    という方は1を。直ぐにお支払いが可能な方は2を押してください。
+                </prosody>
+            </Say>
+        </Gather>
+    </Response>
+  `
+
   if (req.params.phone_number) {
     const params = {
-      url: TWILLIO_URL,
+      twiml,
+      record: true,
       to: req.params.phone_number,
       from: process.env.PHONE_NUMBER,
     }
@@ -27,9 +53,16 @@ app.get('/make/:phone_number', (req, res) => {
 
 // Recieve a phone call
 app.get('/recieve', (req, res) => {
-  const twiml = new VoiceResponse()
-
-  twiml.say('電話してくれてありがとう')
+  const twiml = `
+    <Response>
+        <Say language="ja-JP" voice="Polly.Takumi">
+            <prosody rate="fast" volume="soft" pitch="x-low">
+                もしもし婆ちゃん？俺だけど、なんかやばいことに巻き込まれちゃってさー。
+                いま直ぐ¥10くれない？
+            </prosody>
+        </Say>
+    </Response>
+  `
 
   res.status(200).header({ 'Content-Type': 'text/xml' }).send(twiml.toString())
 })
