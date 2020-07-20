@@ -9,34 +9,47 @@ const app = express()
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(bodyParser.json())
 
-// Make a simple phone call
-app.get('/make/:phone_number', (req, res) => {
-  const twiml = `
-    <Response>
+const twiML = (content) => `<Response>${content}</Response>`
+
+const gatherTemplate = (content, path) => {
+  return `<Gather action="${'https://' + req.get('host') + '/' + path}">${content}</Gather>`
+}
+
+const manSpeakingTemplate = (content) => {
+  const res = `
         <Say language="ja-JP" voice="Polly.Takumi">
             <prosody rate="fast" volume="soft" pitch="x-low">
-                おいコラ。金返せコラ。
-                死にてぇなら生命保険に加入してからにしろ。
-                クズが。返済がまだ終わってねえだろうが。
-                お客様のお支払い頂く金額は遅延損害金を含めまして
-                ¥102481となります。
+                ${content}
             </prosody>
         </Say>
-        <Say language="ja-JP" voice="Polly.Mizuki">
-            <prosody rate="x-fast" volume="x-loud" pitch="high">
-                え！すぐにそんな大金用意できません！
-                もう少しだけ待ってくれませんか？？
-            </prosody>
-        </Say>
-        <Gather action="${'https://' + req.get('host') + '/gather'}">
-            <Say language="ja-JP" voice="Polly.Takumi">
-                <prosody rate="fast" volume="soft" pitch="x-low">
-                    という方は1を。直ぐにお支払いが可能な方は2を押してください。
-                </prosody>
-            </Say>
-        </Gather>
-    </Response>
-  `
+    `
+  return res
+}
+
+const womanSpeakingTemplate = (content) => {
+  const res = `
+          <Say language="ja-JP" voice="Polly.Mizuki">
+          <prosody rate="x-fast" volume="x-loud" pitch="high">
+                  ${content}
+              </prosody>
+          </Say>
+      `
+  return res
+}
+
+// Make a simple phone call
+app.get('/make/:phone_number', (req, res) => {
+  const line1 = 'おいコラ。金返せコラ。クズが。'
+  const line2 = 'え！すぐにそんな大金用意できません！もう少しだけ待ってくれませんか？？'
+  const line3 = 'という方は1を。直ぐにお支払いが可能な方は2を押してください。'
+  const line4 = 'なんか言え。'
+
+  const twiml = twiML(
+    manSpeakingTemplate(line1),
+    womanSpeakingTemplate(line2),
+    gatherTemplate(manSpeakingTemplate(line3), 'gather'),
+    manSpeakingTemplate(line4)
+  )
 
   if (req.params.phone_number) {
     const params = {
@@ -55,51 +68,26 @@ app.get('/make/:phone_number', (req, res) => {
 })
 
 app.post('/gather', (req, res) => {
-  const routeOne = `
-    <Response>
-        <Say language="ja-JP" voice="Polly.Takumi">
-            <prosody rate="fast" volume="soft" pitch="x-low">
-                もしもし婆ちゃん？俺だけど、なんかやばいことに巻き込まれちゃってさー。
-                いま直ぐ¥10くれない？
-            </prosody>
-        </Say>
-    </Response>
-  `
+  const route1 = 'もしもし婆ちゃん？俺だけど、なんかやばいことに巻き込まれちゃってさー。いま直ぐ¥10くれない？'
+  const route2 = 'ここに振り込んでおいて！'
+  const routeE = 'エラーです。'
 
-  const routeTwo = `
-  <Response>
-      <Say language="ja-JP" voice="Polly.Takumi">
-          <prosody rate="fast" volume="soft" pitch="x-low">
-              ここに振り込んでおいて！
-          </prosody>
-      </Say>
-  </Response>
-`
+  const param = req.body.Digits
 
-  const routeError = `
-<Response>
-    <Say language="ja-JP" voice="Polly.Takumi">
-        <prosody rate="fast" volume="soft" pitch="x-low">
-            エラーです。
-        </prosody>
-    </Say>
-</Response>
-`
-
-  if (req.body.Digits) {
-    switch (req.body.Digits) {
+  if (param) {
+    switch (param) {
       case '1':
-        res.status(200).header({ 'Content-Type': 'text/xml' }).send(routeOne.toString())
+        res.send(twiML(manSpeakingTemplate(route1)))
         break
       case '2':
-        res.status(200).header({ 'Content-Type': 'text/xml' }).send(routeTwo.toString())
+        res.send(twiML(manSpeakingTemplate(route2)))
         break
       default:
-        res.status(200).header({ 'Content-Type': 'text/xml' }).send(routeError.toString())
+        res.send(twiML(manSpeakingTemplate(routeE)))
         break
     }
   } else {
-    res.status(200).header({ 'Content-Type': 'text/xml' }).send(routeError.toString())
+    res.send(twiML(manSpeakingTemplate(routeE)))
   }
 })
 
