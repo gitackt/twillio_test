@@ -25,7 +25,7 @@ app.get('/make/:phone_number', (req, res) => {
                 もう少しだけ待ってくれませんか？？
             </prosody>
         </Say>
-        <Gather action="/gather">
+        <Gather action="${req.protocol + '://' + req.get('host') + '/gather'}">
             <Say language="ja-JP" voice="Polly.Takumi">
                 <prosody rate="fast" volume="soft" pitch="x-low">
                     という方は1を。直ぐにお支払いが可能な方は2を押してください。
