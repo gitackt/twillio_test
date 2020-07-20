@@ -25,7 +25,7 @@ app.get('/make/:phone_number', (req, res) => {
                 もう少しだけ待ってくれませんか？？
             </prosody>
         </Say>
-        <Gather action="/recieve" method="GET">
+        <Gather action="/gather">
             <Say language="ja-JP" voice="Polly.Takumi">
                 <prosody rate="fast" volume="soft" pitch="x-low">
                     という方は1を。直ぐにお支払いが可能な方は2を押してください。
@@ -51,9 +51,8 @@ app.get('/make/:phone_number', (req, res) => {
   }
 })
 
-// Recieve a phone call
-app.get('/recieve', (req, res) => {
-  const twiml = `
+app.post('/gather', (req, res) => {
+  const routeOne = `
     <Response>
         <Say language="ja-JP" voice="Polly.Takumi">
             <prosody rate="fast" volume="soft" pitch="x-low">
@@ -64,7 +63,41 @@ app.get('/recieve', (req, res) => {
     </Response>
   `
 
-  res.status(200).header({ 'Content-Type': 'text/xml' }).send(twiml.toString())
+  const routeTwo = `
+  <Response>
+      <Say language="ja-JP" voice="Polly.Takumi">
+          <prosody rate="fast" volume="soft" pitch="x-low">
+              ここに振り込んでおいて！
+          </prosody>
+      </Say>
+  </Response>
+`
+
+  const routeError = `
+<Response>
+    <Say language="ja-JP" voice="Polly.Takumi">
+        <prosody rate="fast" volume="soft" pitch="x-low">
+            エラーです。
+        </prosody>
+    </Say>
+</Response>
+`
+
+  if (request.body.Digits) {
+    switch (request.body.Digits) {
+      case '1':
+        res.status(200).header({ 'Content-Type': 'text/xml' }).send(routeOne.toString())
+        break
+      case '2':
+        res.status(200).header({ 'Content-Type': 'text/xml' }).send(routeTwo.toString())
+        break
+      default:
+        res.status(200).header({ 'Content-Type': 'text/xml' }).send(routeError.toString())
+        break
+    }
+  } else {
+    res.status(200).header({ 'Content-Type': 'text/xml' }).send(routeError.toString())
+  }
 })
 
 const PORT = process.env.PORT || 8080
