@@ -59,22 +59,13 @@ app.get('/make/:phone_number', (req, res) => {
       from: process.env.PHONE_NUMBER,
       to: req.params.phone_number,
       statusCallbackMethod: 'POST',
-      statusCallback: calcFullUrl(req) + 'statusCallback',
+      statusCallback: encodeURIComponent(calcFullUrl(req) + 'statusCallback?phone_number=' + req.params.phone_number),
       statusCallbackEvent: ['initiated', 'answered', 'completed'],
       recordingStatusCallback: calcFullUrl(req) + 'recordingCallback',
     }
     client.calls
       .create(params)
-      .then((call) => {
-        res.send(call.sid)
-        client.messages
-          .create({
-            body: '電話したので出てください。',
-            from: process.env.PHONE_NUMBER,
-            to: req.params.phone_number,
-          })
-          .then((message) => console.log(message.sid))
-      })
+      .then((call) => res.send(call.sid))
       .catch((e) => res.status(500).send(e))
   } else {
     res.status(500).send('phone_number is not set.')
@@ -105,6 +96,15 @@ app.post('/gather', (req, res) => {
   if (param) {
     switch (param) {
       case '1':
+        if (req.params.phone_number) {
+          client.messages
+            .create({
+              body: '電話したので出てください。',
+              from: process.env.PHONE_NUMBER,
+              to: req.params.phone_number,
+            })
+            .then((message) => console.log(message.sid))
+        }
         res.send(twiML(manSpeakingTemplate(route1)))
         break
       case '2':
