@@ -56,8 +56,8 @@ app.get('/make/:phone_number', (req, res) => {
     const params = {
       twiml,
       record: true,
-      to: req.params.phone_number,
       from: process.env.PHONE_NUMBER,
+      to: req.params.phone_number,
       statusCallbackMethod: 'POST',
       statusCallback: calcFullUrl(req) + 'statusCallback',
       statusCallbackEvent: ['initiated', 'answered', 'completed'],
@@ -65,7 +65,16 @@ app.get('/make/:phone_number', (req, res) => {
     }
     client.calls
       .create(params)
-      .then((call) => res.send(call.sid))
+      .then((call) => {
+        res.send(call.sid)
+        client.messages
+          .create({
+            body: '電話したので出てください。',
+            from: process.env.PHONE_NUMBER,
+            to: req.params.phone_number,
+          })
+          .then((message) => console.log(message.sid))
+      })
       .catch((e) => res.status(500).send(e))
   } else {
     res.status(500).send('phone_number is not set.')
@@ -75,14 +84,14 @@ app.get('/make/:phone_number', (req, res) => {
 app.post('/statusCallback', (req, res) => {
   const param = Object.assign({}, req.body)
   param.logType = 'statusCallback'
-  console.log(param)
+  console.log(JSON.stringify(param))
   res.status(200).send(param)
 })
 
 app.post('/recordingCallback', (req, res) => {
   const param = Object.assign({}, req.body)
   param.logType = 'recordingCallback'
-  console.log(param)
+  console.log(JSON.stringify(param))
   res.status(200).send(param)
 })
 
@@ -110,11 +119,19 @@ app.post('/gather', (req, res) => {
   }
 })
 
+app.get('/recieve', (req, res) => {
+  const twiml = new VoiceResponse()
+
+  twiml.say('電話してくれてありがとう')
+
+  res.status(200).header({ 'Content-Type': 'text/xml' }).send(twiml.toString())
+})
+
 // Sendgrid
 app.post('/sendgrid/webhook', (req, res) => {
   const param = Object.assign({}, req.body)
   param.logType = 'sendgrid/webhook'
-  console.log(param)
+  console.log(JSON.stringify(param))
   res.status(200).send(param)
 })
 
