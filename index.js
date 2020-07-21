@@ -58,8 +58,10 @@ app.get('/make/:phone_number', (req, res) => {
       record: true,
       to: req.params.phone_number,
       from: process.env.PHONE_NUMBER,
-      statusCallback: calcFullUrl(req) + 'statusCallback',
       statusCallbackMethod: 'POST',
+      statusCallback: calcFullUrl(req) + 'statusCallback',
+      statusCallbackEvent: ['initiated', 'answered', 'completed'],
+      recordingStatusCallback: calcFullUrl(req) + 'recordingCallback',
     }
     client.calls
       .create(params)
@@ -71,6 +73,13 @@ app.get('/make/:phone_number', (req, res) => {
 })
 
 app.post('/statusCallback', (req, res) => {
+  console.log('statusCallback')
+  console.log(req.body)
+  res.status(200)
+})
+
+app.post('/recordingCallback', (req, res) => {
+  console.log('recordingCallback')
   console.log(req.body)
   res.status(200)
 })
