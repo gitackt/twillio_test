@@ -91,14 +91,14 @@ app.post('/gather/:phone_number', (req, res) => {
   const route2 = 'ここに振り込んでおいて！'
   const routeE = 'エラーです。'
 
-  const param = req.body.Digits
+  const digits = req.body.Digits
 
   const param = Object.assign({}, req.body)
   param.logType = 'gather'
   console.log(param.toString())
 
-  if (param) {
-    switch (param) {
+  if (digits) {
+    switch (digits) {
       case '1':
         if (req.params.phone_number) {
           client.messages
