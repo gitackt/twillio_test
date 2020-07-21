@@ -73,15 +73,17 @@ app.get('/make/:phone_number', (req, res) => {
 })
 
 app.post('/statusCallback', (req, res) => {
-  console.log('statusCallback')
-  console.log(req.body)
-  res.status(200).send(req.body)
+  const param = Object.assign({}, req.body)
+  param.logType = 'statusCallback'
+  console.log(param)
+  res.status(200).send(param)
 })
 
 app.post('/recordingCallback', (req, res) => {
-  console.log('recordingCallback')
-  console.log(req.body)
-  res.status(200).send(req.body)
+  const param = Object.assign({}, req.body)
+  param.logType = 'recordingCallback'
+  console.log(param)
+  res.status(200).send(param)
 })
 
 app.post('/gather', (req, res) => {
@@ -110,9 +112,10 @@ app.post('/gather', (req, res) => {
 
 // Sendgrid
 app.post('/sendgrid/webhook', (req, res) => {
-  console.log('sendgrid/webhook')
-  console.log(req.body)
-  res.status(200).send(req.body)
+  const param = Object.assign({}, req.body)
+  param.logType = 'sendgrid/webhook'
+  console.log(param)
+  res.status(200).send(param)
 })
 
 const PORT = process.env.PORT || 8080
