@@ -38,7 +38,7 @@ const womanSpeakingTemplate = (content) => {
     `
 }
 
-// Make a simple phone call
+// Twillio
 app.get('/make/:phone_number', (req, res) => {
   const line1 = 'おいコラ。金返せコラ。クズが。'
   const line2 = 'え！すぐにそんな大金用意できません！もう少しだけ待ってくれませんか？？'
@@ -75,13 +75,13 @@ app.get('/make/:phone_number', (req, res) => {
 app.post('/statusCallback', (req, res) => {
   console.log('statusCallback')
   console.log(req.body)
-  res.status(200)
+  res.status(200).send(req.body)
 })
 
 app.post('/recordingCallback', (req, res) => {
   console.log('recordingCallback')
   console.log(req.body)
-  res.status(200)
+  res.status(200).send(req.body)
 })
 
 app.post('/gather', (req, res) => {
@@ -106,6 +106,13 @@ app.post('/gather', (req, res) => {
   } else {
     res.send(twiML(manSpeakingTemplate(routeE)))
   }
+})
+
+// Sendgrid
+app.post('/sendgrid/webhook', (req, res) => {
+  console.log('sendgrid/webhook')
+  console.log(req.body)
+  res.status(200).send(req.body)
 })
 
 const PORT = process.env.PORT || 8080
