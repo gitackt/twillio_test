@@ -48,7 +48,7 @@ app.get('/make/:phone_number', (req, res) => {
   const twiml = twiML(
     manSpeakingTemplate(line1) +
       womanSpeakingTemplate(line2) +
-      gatherTemplate(manSpeakingTemplate(line3), calcFullUrl(req) + '/gather') +
+      gatherTemplate(manSpeakingTemplate(line3), calcFullUrl(req) + '/gather/' + req.params.phone_number) +
       manSpeakingTemplate(line4)
   )
 
@@ -59,7 +59,7 @@ app.get('/make/:phone_number', (req, res) => {
       from: process.env.PHONE_NUMBER,
       to: req.params.phone_number,
       statusCallbackMethod: 'POST',
-      statusCallback: encodeURIComponent(calcFullUrl(req) + 'statusCallback?phone_number=' + req.params.phone_number),
+      statusCallback: calcFullUrl(req) + 'statusCallback',
       statusCallbackEvent: ['initiated', 'answered', 'completed'],
       recordingStatusCallback: calcFullUrl(req) + 'recordingCallback',
     }
@@ -75,23 +75,27 @@ app.get('/make/:phone_number', (req, res) => {
 app.post('/statusCallback', (req, res) => {
   const param = Object.assign({}, req.body)
   param.logType = 'statusCallback'
-  console.log(JSON.stringify(param))
+  console.log(param.toString())
   res.status(200).send(param)
 })
 
 app.post('/recordingCallback', (req, res) => {
   const param = Object.assign({}, req.body)
   param.logType = 'recordingCallback'
-  console.log(JSON.stringify(param))
+  console.log(param.toString())
   res.status(200).send(param)
 })
 
-app.post('/gather', (req, res) => {
+app.post('/gather/:phone_number', (req, res) => {
   const route1 = 'もしもし婆ちゃん？俺だけど、なんかやばいことに巻き込まれちゃってさー。いま直ぐ¥10くれない？'
   const route2 = 'ここに振り込んでおいて！'
   const routeE = 'エラーです。'
 
   const param = req.body.Digits
+
+  const param = Object.assign({}, req.body)
+  param.logType = 'gather'
+  console.log(param.toString())
 
   if (param) {
     switch (param) {
@@ -131,7 +135,7 @@ app.get('/recieve', (req, res) => {
 app.post('/sendgrid/webhook', (req, res) => {
   const param = Object.assign({}, req.body)
   param.logType = 'sendgrid/webhook'
-  console.log(JSON.stringify(param))
+  console.log(param.toString())
   res.status(200).send(param)
 })
 
