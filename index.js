@@ -9,6 +9,12 @@ const app = express()
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(bodyParser.json())
 
+const calcFullUrl = (req) => {
+  const host = req.get('host')
+  const isLocal = host.includes('localhost')
+  return isLocal ? 'http://' + host : 'https://' + host
+}
+
 const twiML = (content) => `<Response>${content}</Response>`
 const gatherTemplate = (content, path) => `<Gather action="${path}">${content}</Gather>`
 
@@ -42,7 +48,7 @@ app.get('/make/:phone_number', (req, res) => {
   const twiml = twiML(
     manSpeakingTemplate(line1) +
       womanSpeakingTemplate(line2) +
-      gatherTemplate(manSpeakingTemplate(line3), 'https://' + req.get('host') + '/gather') +
+      gatherTemplate(manSpeakingTemplate(line3), calcFullUrl(req) + '/gather') +
       manSpeakingTemplate(line4)
   )
 
@@ -52,6 +58,8 @@ app.get('/make/:phone_number', (req, res) => {
       record: true,
       to: req.params.phone_number,
       from: process.env.PHONE_NUMBER,
+      statusCallback: calcFullUrl(req) + 'statusCallback',
+      statusCallbackMethod: 'POST',
     }
     client.calls
       .create(params)
@@ -60,6 +68,11 @@ app.get('/make/:phone_number', (req, res) => {
   } else {
     res.status(500).send('phone_number is not set.')
   }
+})
+
+app.post('/statusCallback', (req, res) => {
+  console.log(req.body)
+  res.status(200)
 })
 
 app.post('/gather', (req, res) => {
